@@ -1,4 +1,4 @@
-FMRI2IMAGE
+FMRI2IMG
 ==========
 
 # 1. Intro
@@ -22,6 +22,8 @@ The current implementation is heavily simplified:
   layer.
 - The hidden state is fed into the Stable Diffusion pipeline in place of
   the prompt embeddings.
+- The training code is based on the huggingface textual inversion script
+  (in Links session).
 
 ## Workflow
 
