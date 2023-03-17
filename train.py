@@ -57,10 +57,12 @@ class Fmri2ImageDataset (Dataset):
         if self.is_train:
             # augment
             pass
-        v = torch.from_numpy(v).float()
+        v = torch.from_numpy(v).float() / 100
         image = torch.from_numpy(image).permute(2, 0, 1)
         assert v.shape == (DIM,)
         assert image.shape == (3, IMAGE_SIZE, IMAGE_SIZE)
+        assert not torch.any(torch.isnan(v))
+        assert not torch.any(torch.isnan(image))
         return {
                 'fmri': v,
                 'pixel_values': image
@@ -179,12 +181,19 @@ def main(args):
 
             with accelerator.accumulate(model.encoder):
                 # Convert images to latent space
-                loss = model.forwardTrain(batch['fmri'], batch['pixel_values'].to(dtype=weight_dtype))
+                out = model.forwardTrain(batch['fmri'], batch['pixel_values'].to(dtype=weight_dtype))
+                loss = out['loss']
+
                 accelerator.backward(loss)
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
+                if accelerator.is_main_process and global_step % 100 == 0:
+                    pred = model.decode(out['latents']) * 255
+
+                    logs['images'] = (out['image'] + 1) * 127.5
+                    logs['predicts'] = pred
                 accelerator.log(logs, step=global_step)
                 global_step += 1
 
