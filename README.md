@@ -25,7 +25,13 @@ The current implementation is heavily simplified:
 
 ## Workflow
 
+Don't expect this to work directly.
+
 ```
+
+# 0. Update configuration
+# edit local-config.py to override  default options in config.py.
+
 # 1. Scan the fMRI data and calculate statistics.
 ./calc_stat.py
 
@@ -42,8 +48,6 @@ The current implementation is heavily simplified:
 ./test.py
 
 ```
-
-
 
 # 3. Links
 
