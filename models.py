@@ -14,12 +14,12 @@ from diffusers import (
 from diffusers.optimization import get_scheduler
 
 class FmriEncoder (torch.nn.Module):
-    def __init__ (self, Din, Dout, seqlen=128):
+    def __init__ (self, Din, Dout, seqlen=77):
         super().__init__()
         self.seqlen = seqlen
         self.dim = Dout
-        self.linear = torch.nn.Linear(Din, 4096)
-        self.linear2 = torch.nn.Linear(4096, Dout * seqlen)
+        self.linear = torch.nn.Linear(Din, 8192)
+        self.linear2 = torch.nn.Linear(8192, Dout * seqlen)
         self.final_layer_norm = nn.LayerNorm(Dout)
     
     def forward (self, X):
