@@ -33,7 +33,7 @@ class Fmri2Image (torch.nn.Module):
         self.vae.requires_grad_(False)
         self.unet.requires_grad_(False)
         self.encoder = FmriEncoder(input_dim, encode_dim)
-        self.noise_scheduler.config.prediction_type = 'v_prediction'
+        #self.noise_scheduler.config.prediction_type = 'v_prediction'
 
     def decode (self, latents):
         latents = 1 / self.vae.config.scaling_factor * latents

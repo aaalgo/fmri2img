@@ -59,7 +59,7 @@ class Fmri2ImageDataset (Dataset):
         if self.is_train:
             # augment
             pass
-        v = torch.from_numpy(v).float() / 100
+        v = torch.from_numpy(v).float() / 1000
         image = torch.from_numpy(image).permute(2, 0, 1)
         assert v.shape == (DIM,)
         assert image.shape == (3, IMAGE_SIZE, IMAGE_SIZE)
@@ -73,9 +73,17 @@ class Fmri2ImageDataset (Dataset):
 def make_image (tensor):
     v = ((tensor + 1.0) * 127.5).detach().cpu().permute(1,2,0).numpy()
     v = np.clip(np.rint(v), 0, 255).astype(np.uint8)
-    return PIL.Image.fromarray(v)
+    return v #return PIL.Image.fromarray(v)
 
-def main(args):
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--samples", type=str, default='train.pkl', help='')
+    parser.add_argument("--stimuli", type=str, default='data/nsd_stimuli.hdf5', help='')
+    parser.add_argument("--output_dir", type=str, default='output', help='')
+    parser.add_argument("--learning_rate", type=float, default=1e-4, help='')
+    parser.add_argument("--epochs", type=int, default=100, help='')
+    args = parser.parse_args()
 
     assert is_wandb_available()
 
@@ -190,6 +198,8 @@ def main(args):
                 # Convert images to latent space
                 out = model.forwardTrain(batch['fmri'], batch['pixel_values'].to(dtype=weight_dtype))
                 loss = out['loss']
+                if torch.isnan(loss):
+                    continue
 
                 accelerator.backward(loss)
                 optimizer.step()
@@ -202,9 +212,8 @@ def main(args):
                         pred = make_image(model.decode(out['latents'][:1])[0])
                     image = make_image(out['image'][0])
 
-                    logs = {}
-                    logs['target'] = [wandb.Image(image)]
-                    logs['predict'] = [wandb.Image(pred)]
+
+                    logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
                     accelerator.log(logs, step=global_step)
                 global_step += 1
 
@@ -218,12 +227,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", type=str, default='train.pkl', help='')
-    parser.add_argument("--stimuli", type=str, default='data/nsd_stimuli.hdf5', help='')
-    parser.add_argument("--output_dir", type=str, default='output', help='')
-    parser.add_argument("--learning_rate", type=float, default=1e-4, help='')
-    parser.add_argument("--epochs", type=int, default=100, help='')
-    args = parser.parse_args()
-    main(args)
+    main()
