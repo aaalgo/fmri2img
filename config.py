@@ -7,6 +7,9 @@ EDGE_THRESHOLD = 0.5
 
 NEIGHBORS_DELTA = []
 
+RESPONSE_DELAY = 1
+DIM = 53047
+
 for d0 in [-1, 0, 1]:
     for d1 in [-1, 0, 1]:
         for d2 in [-1, 0, 1]:
