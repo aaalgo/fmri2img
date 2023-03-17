@@ -16,6 +16,7 @@ from diffusers.optimization import get_scheduler
 from diffusers.utils import is_wandb_available
 import h5py
 import models
+import imgaug.augmenters as iaa
 from config import *
 
 logger = get_logger(__name__)
@@ -26,28 +27,40 @@ class Fmri2ImageDataset (Dataset):
         stimuli_path='data/nsd_stimuli.hdf5'
     ):
         self.imgBrick = h5py.File(stimuli_path, 'r')['imgBrick']
-        assert self.imgBrick.shape[-3:] == (IMAGE_SIZE, IMAGE_SIZE, 3)
+        _, H, W, _ = self.imgBrick.shape
+        assert H == W
         self.samples = []
         #self.imageCache = {}
         with open(path, 'rb') as f:
             for one in pickle.load(f):
                 k = one['image_id']
-                v = one['features']
-                for feature in v:
+                for v in one['features']:
                     self.samples.append((k, v))
         self.size = size
+        self.is_train = is_train
+        if is_train:
+            self.aug = iaa.Sequential([
+                iaa.Resize({"height": IMAGE_SIZE, "width": IMAGE_SIZE})
+                ])
+        else:
+            self.aug = iaa.Sequential([
+                iaa.Resize({"height": IMAGE_SIZE, "width": IMAGE_SIZE})
+                ])
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, i):
         k, v = self.samples[i]
-        image = self.imgBrick[k, :, :, :]
+        image = self.aug(image=self.imgBrick[k, :, :, :])
         image = (image / 127.5 - 1.0).astype(np.float32)
-        if is_train:
+        if self.is_train:
             # augment
             pass
+        v = torch.from_numpy(v).float()
         image = torch.from_numpy(image).permute(2, 0, 1)
+        assert v.shape == (DIM,)
+        assert image.shape == (3, IMAGE_SIZE, IMAGE_SIZE)
         return {
                 'fmri': v,
                 'pixel_values': image
@@ -79,7 +92,7 @@ def main(args):
     if accelerator.is_main_process:
         os.makedirs(args.output_dir, exist_ok=True)
 
-    model = models.Fmri2Image(DIM)
+    model = models.Fmri2Image(DIM, ENCODE_DIM)
 
     '''
     if args.gradient_checkpointing:
@@ -149,16 +162,12 @@ def main(args):
 
     logger.info("***** Running training *****")
     logger.info(f"  Num examples = {len(train_dataset)}")
-    logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.train_batch_size}")
-    logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
 
-    def save_progress (output):
+    def save (output):
         logger.info("Saving model to %s ..." % output)
         torch.save(accelerator.unwrap_model(model.encoder).state_dict(), output)
 
+    global_step = 0
     for epoch in range(args.epochs):
         model.encoder.train()
         if accelerator.is_main_process:
@@ -170,20 +179,21 @@ def main(args):
 
             with accelerator.accumulate(model.encoder):
                 # Convert images to latent space
-                loss = model.forwardTrain(batch['fmri'], batch['pixel_values'])
+                loss = model.forwardTrain(batch['fmri'], batch['pixel_values'].to(dtype=weight_dtype))
                 accelerator.backward(loss)
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
                 accelerator.log(logs, step=global_step)
+                global_step += 1
 
         if accelerator.is_main_process:
-            save_progress(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
+            save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
 
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        save_progress(os.path.join(args.output_dir, f"fmri2image.bin"))
+        save(os.path.join(args.output_dir, f"fmri2image.bin"))
     accelerator.end_training()
 
 
