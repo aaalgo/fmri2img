@@ -26,7 +26,9 @@ The current implementation is heavily simplified:
 ## Workflow
 
 This is in a very early stage.  Don't expect this to work directly.
-The dataset is extremely big; a single subjects' data is over 200GB.
+You'll need a GPU with 40+GB memory.
+The dataset is very big; a single subjects' low-resolution
+data is over 50GB.
 
 ```
 
