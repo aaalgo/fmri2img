@@ -38,7 +38,8 @@ class Fmri2Image (torch.nn.Module):
     def decode (self, latents):
         latents = 1 / self.vae.config.scaling_factor * latents
         image = self.vae.decode(latents).sample
-        image = (image / 2 + 0.5).clamp(0, 1)
+        image = image.clamp(-1, 1)
+        #image = (image / 2 + 0.5).clamp(0, 1)
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloat16
         return image
 

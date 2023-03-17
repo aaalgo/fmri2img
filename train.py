@@ -16,7 +16,9 @@ from diffusers.optimization import get_scheduler
 from diffusers.utils import is_wandb_available
 import h5py
 import models
+import PIL
 import imgaug.augmenters as iaa
+import wandb
 from config import *
 
 logger = get_logger(__name__)
@@ -67,6 +69,11 @@ class Fmri2ImageDataset (Dataset):
                 'fmri': v,
                 'pixel_values': image
                 }
+
+def make_image (tensor):
+    v = ((tensor + 1.0) * 127.5).detach().cpu().permute(1,2,0).numpy()
+    v = np.clip(np.rint(v), 0, 255).astype(np.uint8)
+    return PIL.Image.fromarray(v)
 
 def main(args):
 
@@ -189,12 +196,16 @@ def main(args):
                 lr_scheduler.step()
                 optimizer.zero_grad()
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
-                if accelerator.is_main_process and global_step % 100 == 0:
-                    pred = model.decode(out['latents']) * 255
-
-                    logs['images'] = (out['image'] + 1) * 127.5
-                    logs['predicts'] = pred
                 accelerator.log(logs, step=global_step)
+                if accelerator.is_main_process and global_step % 100 == 0:
+                    with torch.no_grad():
+                        pred = make_image(model.decode(out['latents'][:1])[0])
+                    image = make_image(out['image'][0])
+
+                    logs = {}
+                    logs['target'] = [wandb.Image(image)]
+                    logs['predict'] = [wandb.Image(pred)]
+                    accelerator.log(logs, step=global_step)
                 global_step += 1
 
         if accelerator.is_main_process:
