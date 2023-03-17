@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import diffusers
 from diffusers import (
@@ -13,14 +14,20 @@ from diffusers import (
 from diffusers.optimization import get_scheduler
 
 class FmriEncoder (torch.nn.Module):
-    def __init__ (self, Din, Dout, seqlen=32):
+    def __init__ (self, Din, Dout, seqlen=128):
         super().__init__()
         self.seqlen = seqlen
         self.dim = Dout
-        self.linear = torch.nn.Linear(Din, Dout * seqlen)
+        self.linear = torch.nn.Linear(Din, 4096)
+        self.linear2 = torch.nn.Linear(4096, Dout * seqlen)
+        self.final_layer_norm = nn.LayerNorm(Dout)
     
     def forward (self, X):
-        return self.linear.forward(X).reshape((-1, self.seqlen, self.dim))
+        hidden_state = F.relu(self.linear.forward(X))
+        hidden_state = self.linear2.forward(hidden_state)
+        hidden_state = hidden_state.reshape((-1, self.seqlen, self.dim))
+        hidden_state = self.final_layer_norm(hidden_state)
+        return hidden_state
 
 class Fmri2Image (torch.nn.Module):
     def __init__ (self, input_dim, encode_dim,
