@@ -57,12 +57,14 @@ data is over 50GB.
 # 3. Links
 
 Dataset:
+
     - Paper: https://www.biorxiv.org/content/10.1101/2021.02.22.432340v1.full.pdf
     - Download: https://cvnlab.slite.page/p/CT9Fwl4_hc/NSD-Data-Manual
     - For now we only need the `nsddata_timeseries/ppdata/*/func1pt8mm/timeseries` of one subject.  Subject 1 or 2 have the best correct scores; use one of these.
 
 
 Textual Inversion:
+
     - https://huggingface.co/docs/diffusers/training/text_inversion
     - Script: https://github.com/huggingface/diffusers/tree/main/examples/textual_inversion
 
