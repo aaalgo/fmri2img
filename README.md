@@ -66,3 +66,9 @@ data is over 50GB.
     - https://huggingface.co/docs/diffusers/training/text_inversion
     - Script: https://github.com/huggingface/diffusers/tree/main/examples/textual_inversion
 
+
+# 4. Notes
+
+## FreeSurfer
+
+aseg: code 3/42: left and right celebral cortex
