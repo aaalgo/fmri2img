@@ -9,15 +9,14 @@ from tqdm import tqdm
 from calc_stat import Stats
 from config import *
 
-EARLY_VISUAL_CORTEX = [1021, 1001, 1002, 2002, 2003, 2001]
 
-def load_mask (aparc_path='data/aparc_func1pt8.nii.gz', regions=EARLY_VISUAL_CORTEX):
-    aparc = np.asanyarray(nib.load('aparc.nii.gz').dataobj).astype(np.uint16)
+def load_mask (aparc_path=APARC_PATH, regions=EARLY_VISUAL_CORTEX):
+    aparc = np.asanyarray(nib.load(aparc_path).dataobj).astype(np.uint16)
     mask = np.zeros_like(aparc)
     for v in regions:
         mask += (aparc == v)
     assert (mask >= 0).all() and (mask <= 1).all()
-    print(np.sum(mask))
+    assert np.sum(mask) == VISUAL_DIM
     return mask
 
 if __name__ == '__main__':
@@ -25,7 +24,7 @@ if __name__ == '__main__':
     os.makedirs(out_dir, exist_ok=True)
 
     mask = load_mask().astype(bool)
-    print("Extracting %d dimensions..." % D)
+    print("Extracting %d-D visual features.." % VISUAL_DIM)
 
     input_paths = glob(CORR_INPUT_PATTERN)
     print(len(input_paths))

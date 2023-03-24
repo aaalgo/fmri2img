@@ -12,22 +12,31 @@ from diffusers import (
     UNet2DConditionModel,
 )
 from diffusers.optimization import get_scheduler
+from config import *
 
 class FmriEncoder (torch.nn.Module):
     def __init__ (self, Din, Dout, seqlen=77):
         super().__init__()
         self.seqlen = seqlen
         self.dim = Dout
-        self.linear = torch.nn.Linear(Din, 8192)
-        self.linear2 = torch.nn.Linear(8192, Dout * seqlen)
+        self.linear = torch.nn.Linear(Din, 4096)
+        self.linear2 = torch.nn.Linear(4096, Dout * seqlen)
+        self.linearB = torch.nn.Linear(Din, 16384)
+        #self.convB = torch.nn.ConvTranspose2d(4, 4, 2, stride=2)
         self.final_layer_norm = nn.LayerNorm(Dout)
+        self.final_layer_norm2 = nn.LayerNorm((4, 64, 64))
     
     def forward (self, X):
         hidden_state = F.relu(self.linear.forward(X))
         hidden_state = self.linear2.forward(hidden_state)
         hidden_state = hidden_state.reshape((-1, self.seqlen, self.dim))
         hidden_state = self.final_layer_norm(hidden_state)
-        return hidden_state
+
+        latents = self.linearB(X).reshape((-1, 4, 64, 64))
+        #latents = self.convB(latents)
+        latents = self.final_layer_norm2(latents)
+
+        return hidden_state, latents
 
 class Fmri2Image (torch.nn.Module):
     def __init__ (self, input_dim, encode_dim,
@@ -41,6 +50,7 @@ class Fmri2Image (torch.nn.Module):
         self.unet.requires_grad_(False)
         self.encoder = FmriEncoder(input_dim, encode_dim)
         #self.noise_scheduler.config.prediction_type = 'v_prediction'
+        self.noise_scheduler.config.num_train_timesteps = TRAIN_TIMESTEPS
 
     def decode (self, latents):
         latents = 1 / self.vae.config.scaling_factor * latents
@@ -51,8 +61,11 @@ class Fmri2Image (torch.nn.Module):
         return image
 
     def forwardTrain (self, fmri, image):
+        encoder_hidden_states, latents = self.encoder(fmri)
+        encoder_hidden_states = encoder_hidden_states.to(dtype=self.vae.dtype)
+        latents = latents.to(dtype=self.vae.dtype)
         with torch.no_grad():
-            latents = self.vae.encode(image).latent_dist.sample().detach()
+            #latents = self.vae.encode(image).latent_dist.sample().detach()
             assert not torch.any(torch.isnan(latents))
             latents = latents * self.vae.config.scaling_factor
             noise = torch.randn_like(latents)
@@ -61,7 +74,6 @@ class Fmri2Image (torch.nn.Module):
             timesteps = timesteps.long()
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps).to(dtype=image.dtype)
 
-        encoder_hidden_states = self.encoder(fmri).to(dtype=latents.dtype)
         assert not torch.any(torch.isnan(encoder_hidden_states))
         assert not torch.any(torch.isnan(noisy_latents))
         model_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample

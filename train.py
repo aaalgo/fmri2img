@@ -78,10 +78,10 @@ def make_image (tensor):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", type=str, default='train.pkl', help='')
+    parser.add_argument("--samples", type=str, default='data/train.pkl', help='')
     parser.add_argument("--stimuli", type=str, default='data/nsd_stimuli.hdf5', help='')
     parser.add_argument("--output_dir", type=str, default='output', help='')
-    parser.add_argument("--learning_rate", type=float, default=1e-4, help='')
+    parser.add_argument("--learning_rate", type=float, default=5e-4, help='')
     parser.add_argument("--epochs", type=int, default=100, help='')
     args = parser.parse_args()
 
