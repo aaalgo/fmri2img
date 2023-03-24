@@ -1,6 +1,17 @@
 FMRI2IMG
 ==========
 
+WanDB: https://wandb.ai/aaalgo/fmri2image?workspace=user-aaalgo
+
+Updates:
+
+- Mar 24, 2023:  No signal yet.  Currently using a simple up-scaling
+  conv net for decoding, so we avoid the hidden bugs when connecting to
+  stable diffusion.  The code is in the "new" branch.  Some signal is
+  visible in the training images on WanDB, but that is likely caused by
+  overfitting.
+
+
 # 1. Intro
 
 This is an effort to reproduce the results of Takagi and Nishimoto
