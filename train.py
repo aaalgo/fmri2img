@@ -42,18 +42,22 @@ class Fmri2ImageDataset (Dataset):
         self.is_train = is_train
         if is_train:
             self.aug = iaa.Sequential([
-                iaa.Resize({"height": IMAGE_SIZE, "width": IMAGE_SIZE})
+                iaa.GaussianBlur(sigma=(0.0, 3.0)),
+                iaa.Resize({"height": IMAGE_SIZE, "width": IMAGE_SIZE}),
+                iaa.Affine(scale=(1.0, 1.2)),
+                iaa.CropToFixedSize(IMAGE_SIZE, IMAGE_SIZE)
                 ])
         else:
             self.aug = iaa.Sequential([
                 iaa.Resize({"height": IMAGE_SIZE, "width": IMAGE_SIZE})
                 ])
+        self.factor = 10
 
     def __len__(self):
-        return len(self.samples)
+        return len(self.samples) * self.factor
 
     def __getitem__(self, i):
-        k, v = self.samples[i]
+        k, v = self.samples[i % len(self.samples)]
         image = self.aug(image=self.imgBrick[k, :, :, :])
         image = (image / 127.5 - 1.0).astype(np.float32)
         if self.is_train:
@@ -81,8 +85,8 @@ def main():
     parser.add_argument("--samples", type=str, default='data/train.pkl', help='')
     parser.add_argument("--stimuli", type=str, default='data/nsd_stimuli.hdf5', help='')
     parser.add_argument("--output_dir", type=str, default='output', help='')
-    parser.add_argument("--learning_rate", type=float, default=5e-4, help='')
-    parser.add_argument("--epochs", type=int, default=100, help='')
+    parser.add_argument("--learning_rate", type=float, default=1e-3, help='')
+    parser.add_argument("--epochs", type=int, default=10000, help='')
     args = parser.parse_args()
 
     assert is_wandb_available()
@@ -155,14 +159,14 @@ def main():
     # For mixed precision training we cast the unet and vae weights to half-precision
     # as these models are only used for inference, keeping weights in full precision is not required.
     weight_dtype = torch.float32
-    if accelerator.mixed_precision == "fp16":
-        weight_dtype = torch.float16
-    else:
-        assert False
+    #if accelerator.mixed_precision == "fp16":
+    #    weight_dtype = torch.float16
+    #else:
+    #    assert False
 
     # Move vae and unet to device and cast to weight_dtype
-    model.unet.to(accelerator.device, dtype=weight_dtype)
-    model.vae.to(accelerator.device, dtype=weight_dtype)
+    #model.unet.to(accelerator.device, dtype=weight_dtype)
+    #model.vae.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     '''
@@ -207,18 +211,18 @@ def main():
                 optimizer.zero_grad()
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
                 accelerator.log(logs, step=global_step)
-                if accelerator.is_main_process and global_step % 100 == 0:
-                    with torch.no_grad():
-                        pred = make_image(model.decode(out['latents'][:1])[0])
-                    image = make_image(out['image'][0])
+                if accelerator.is_main_process and global_step % 200 == 0:
+                    pred = make_image(out['images'][0])
+                    image = make_image(out['targets'][0])
 
 
                     logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
                     accelerator.log(logs, step=global_step)
                 global_step += 1
 
-        if accelerator.is_main_process:
-            save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
+        if epoch % 10 == 0: 
+            if accelerator.is_main_process:
+                save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
 
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:

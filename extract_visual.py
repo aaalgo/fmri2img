@@ -16,15 +16,30 @@ def load_mask (aparc_path=APARC_PATH, regions=EARLY_VISUAL_CORTEX):
     for v in regions:
         mask += (aparc == v)
     assert (mask >= 0).all() and (mask <= 1).all()
-    assert np.sum(mask) == VISUAL_DIM
+    #assert np.sum(mask) == VISUAL_DIM
     return mask
 
-if __name__ == '__main__':
-    out_dir = 'visual'
-    os.makedirs(out_dir, exist_ok=True)
+def extract (ts, mask):
+    v = []
+    for i in range(ts.shape[3]):
+        v.append(ts[:, :, :, i][mask].flatten())
+    v = np.stack(v)
+    return v
 
-    mask = load_mask().astype(bool)
-    print("Extracting %d-D visual features.." % VISUAL_DIM)
+if __name__ == '__main__':
+    lower_dir = 'visual/lower'
+    higher_dir = 'visual/higher'
+    both_dir = 'visual/both'
+    os.makedirs(lower_dir, exist_ok=True)
+    os.makedirs(higher_dir, exist_ok=True)
+    os.makedirs(both_dir, exist_ok=True)
+
+    lower_mask = load_mask(regions=EARLY_VISUAL_CORTEX).astype(bool)
+    higher_mask = load_mask(regions=HIGHER_VISUAL_CORTEX).astype(bool)
+    both_mask = np.logical_or(lower_mask, higher_mask)
+    print("Lower:", np.sum(lower_mask))
+    print("Higher:", np.sum(higher_mask))
+    print("Extracting visual features..")
 
     input_paths = glob(CORR_INPUT_PATTERN)
     print(len(input_paths))
@@ -34,12 +49,13 @@ if __name__ == '__main__':
         #ts = ts.get_data()
         ts = np.asanyarray(ts.dataobj)
         #print(ts.dtype)
-        v = []
-        for i in range(ts.shape[3]):
-            v.append(ts[:, :, :, i][mask].flatten())
-        v = np.stack(v)
         #print(v.shape)
-        np.savez(os.path.join(out_dir, os.path.basename(input_path)), v)
+        lower = extract(ts, lower_mask)
+        higher = extract(ts, higher_mask)
+        both = extract(ts, both_mask)
+        np.savez(os.path.join(lower_dir, os.path.basename(input_path)), lower)
+        np.savez(os.path.join(higher_dir, os.path.basename(input_path)), higher)
+        np.savez(os.path.join(both_dir, os.path.basename(input_path)), both)
     #with open('features.pkl', 'wb') as f:
     #    pickle.dump(outputs, f)
 
