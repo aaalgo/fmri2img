@@ -5,6 +5,9 @@ WanDB: https://wandb.ai/aaalgo/fmri2image?workspace=user-aaalgo
 
 Updates:
 
+- Mar 25, 2023:  Using betas as input.  The data fitting becomes
+  much faster, but the test set barely have any signal.
+
 - Mar 24, 2023:  No signal yet.  Currently using a simple up-scaling
   conv net for decoding, so we avoid the hidden bugs when connecting to
   stable diffusion.  The code is in the "new" branch.  Some signal is
@@ -77,6 +80,8 @@ data is over 50GB.
     - https://huggingface.co/docs/diffusers/training/text_inversion
     - Script: https://github.com/huggingface/diffusers/tree/main/examples/textual_inversion
 
+* fMRI Tutorial:
+	- https://andysbrainbook.readthedocs.io/
 
 # 4. Notes
 
