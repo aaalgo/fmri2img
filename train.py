@@ -216,7 +216,7 @@ def main():
             logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
             accelerator.log(logs, step=global_step)
 
-        if epoch % 5 == 0: 
+        if epoch % 1 == 0: 
             if accelerator.is_main_process:
                 save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
 

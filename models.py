@@ -26,7 +26,7 @@ class FmriEncoder (torch.nn.Module):
 
         # 4 * 4 * 4
         
-        #self.deconv1 = nn.ConvTranspose2d(16, 16, kernel_size=4, stride=2, padding=1)
+        self.deconv1 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
         # 32x32
 
         #self.deconv2 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
@@ -42,11 +42,11 @@ class FmriEncoder (torch.nn.Module):
         x = self.fc2(x)
         x = nn.functional.gelu(x)
         x = self.fc3(x)
-        #x = nn.functional.gelu(x)
+        x = nn.functional.gelu(x)
         #x = self.fc3(x)
         #x = nn.functional.gelu(x)
-        x = x.view(-1, 4, 16, 16)
-        #x = self.deconv1(x)
+        x = x.view(-1, 16, 8, 8)
+        x = self.deconv1(x)
         #x = nn.functional.gelu(x)
         #x = self.deconv2(x)
         #output = nn.functional.gelu(x)
