@@ -60,10 +60,7 @@ class Fmri2ImageDataset (Dataset):
         k, v = self.samples[i % len(self.samples)]
         image = self.aug(image=self.imgBrick[k, :, :, :])
         image = (image / 127.5 - 1.0).astype(np.float32)
-        if self.is_train:
-            # augment
-            pass
-        v = torch.from_numpy(v).float() / 1000
+        v = torch.from_numpy(v).float()
         image = torch.from_numpy(image).permute(2, 0, 1)
         assert v.shape == (DIM,)
         assert image.shape == (3, IMAGE_SIZE, IMAGE_SIZE)
