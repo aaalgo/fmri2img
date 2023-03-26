@@ -46,17 +46,13 @@ test_ds = Fmri2ImageDataset('data/test.pkl', is_train=False)
 #random.seed(1999)
 random.shuffle(test_ds.samples)
 encoder = FmriEncoder(DIM)
-encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-70.bin')))
+encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-20.bin')))
 encoder.to(device)
 
 DUP = 1
 COLS = 5
 
-gal = Gallery('test_out', cols= (1 + DUP) * COLS)
-for _ in range(COLS):
-    gal.text("What Subject Sees")
-    for i in range(DUP):
-        gal.text("Decoded Image %d" % (i+1))
+gal = Gallery('test_out', cols= COLS)
 
 def make_image (tensor):
     v = ((tensor.clamp(-1,1) + 1.0) * 127.5).detach().cpu().permute(1,2,0).numpy()
@@ -65,13 +61,14 @@ def make_image (tensor):
 
 for i in tqdm(range(64)):
     sample = test_ds[i]
-    PIL.Image.fromarray(make_image(sample['pixel_values'])).save(gal.next())
+    #PIL.Image.fromarray(make_image(sample['pixel_values'])).save(gal.next())
     #target.resize((SIZE, SIZE)).save(gal.next())
     with torch.no_grad():
         images = encoder(sample['fmri'].reshape((1, -1)).to(device))
         #images = make_images(images)
         #images = pipeline(prompt_embeds=encode, negative_prompt=None, latents=latents, num_inference_steps=1, num_images_per_prompt=DUP).images
         #images = pipeline(prompt="", latents=latents, num_inference_steps=50, num_images_per_prompt=DUP).images
-    PIL.Image.fromarray(make_image(images[0])).save(gal.next())
+    out = np.concatenate([make_image(sample['pixel_values']), (make_image(images[0]))], axis=1)
+    PIL.Image.fromarray(out).save(gal.next())
     gal.flush()
 
