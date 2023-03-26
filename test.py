@@ -41,8 +41,9 @@ def dummy(images, **kwargs):
 test_ds = Fmri2ImageDataset('data/test.pkl', is_train=False)
 #random.seed(1999)
 random.shuffle(test_ds.samples)
-encoder = FmriEncoder(DIM)
-encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-*.bin')))
+#encoder = FmriEncoder(DIM)
+model = Fmri2Image(DIM)
+model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-*.bin')))
 encoder.to(device)
 
 DUP = 1

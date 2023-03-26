@@ -20,14 +20,19 @@ class FmriEncoder (torch.nn.Module):
     def __init__ (self, Din):
         super().__init__()
         self.fc1 = nn.Linear(Din, 4096)
-        self.fc2 = nn.Linear(4096, 4096)
-        #self.fc3 = nn.Linear(4096, 4096)
+        self.fc2 = nn.Linear(4096, 2048)
+        self.fc3 = nn.Linear(2048, 1024)
         # 16x16
-        self.deconv1 = nn.ConvTranspose2d(16, 16, kernel_size=4, stride=2, padding=1)
+
+        # 4 * 4 * 4
+        
+        #self.deconv1 = nn.ConvTranspose2d(16, 16, kernel_size=4, stride=2, padding=1)
         # 32x32
-        self.deconv2 = nn.ConvTranspose2d(16, 16, kernel_size=4, stride=2, padding=1)
+
+        #self.deconv2 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
+
         # 64x64
-        self.deconv3 = nn.ConvTranspose2d(16, 3, kernel_size=4, stride=2, padding=1)
+        #self.deconv3 = nn.ConvTranspose2d(16, 3, kernel_size=4, stride=2, padding=1)
         # 128x128
         #self.deconv4 = nn.ConvTranspose2d(8, 3, kernel_size=4, stride=2, padding=1)
 
@@ -36,14 +41,14 @@ class FmriEncoder (torch.nn.Module):
         x = nn.functional.gelu(x)
         x = self.fc2(x)
         x = nn.functional.gelu(x)
+        x = self.fc3(x)
+        #x = nn.functional.gelu(x)
         #x = self.fc3(x)
         #x = nn.functional.gelu(x)
-        x = x.view(-1, 16, 16, 16)
-        x = self.deconv1(x)
-        x = nn.functional.gelu(x)
-        x = self.deconv2(x)
-        x = nn.functional.gelu(x)
-        x = self.deconv3(x)
+        x = x.view(-1, 4, 16, 16)
+        #x = self.deconv1(x)
+        #x = nn.functional.gelu(x)
+        #x = self.deconv2(x)
         #output = nn.functional.gelu(x)
         return x
 
@@ -53,9 +58,9 @@ class Fmri2Image (torch.nn.Module):
                         pretrained_revision=None):
         super().__init__()
         #self.noise_scheduler = DDPMScheduler.from_pretrained(pretrained, subfolder="scheduler")
-        #self.vae = AutoencoderKL.from_pretrained(pretrained, subfolder="vae", revision=pretrained_revision)
+        self.vae = AutoencoderKL.from_pretrained(pretrained, subfolder="vae", revision=pretrained_revision)
         #self.unet = UNet2DConditionModel.from_pretrained(pretrained, subfolder="unet", revision=pretrained_revision)
-        #self.vae.requires_grad_(False)
+        self.vae.requires_grad_(False)
         #self.unet.requires_grad_(False)
         self.encoder = FmriEncoder(input_dim)
         #self.noise_scheduler.config.prediction_type = 'v_prediction'
@@ -69,10 +74,13 @@ class Fmri2Image (torch.nn.Module):
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloat16
         return images
 
+    def forward (self, fmri):
+        latents = self.encoder(fmri)
+        latents = latents.to(dtype=self.vae.dtype)
+        return self.vae.decode(latents).sample.float()
+
     def forwardTrain (self, fmri, targets):
-        images = self.encoder(fmri)
-        #latents.to(dtype=self.vae.dtype)
-        #images = self.vae.decode(latents).sample
+        images = self.forward(fmri)
         #with torch.no_grad():
              #targets = self.vae.encode(image).latent_dist.sample().detach()
 #            assert not torch.any(torch.isnan(latents))

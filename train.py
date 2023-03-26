@@ -163,7 +163,7 @@ def main():
 
     # Move vae and unet to device and cast to weight_dtype
     #model.unet.to(accelerator.device, dtype=weight_dtype)
-    #model.vae.to(accelerator.device, dtype=weight_dtype)
+    model.vae.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     '''
@@ -208,16 +208,15 @@ def main():
                 optimizer.zero_grad()
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
                 accelerator.log(logs, step=global_step)
-                if accelerator.is_main_process and global_step % 200 == 0:
-                    pred = make_image(out['images'][0])
-                    image = make_image(out['targets'][0])
-
-
-                    logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
-                    accelerator.log(logs, step=global_step)
                 global_step += 1
 
-        if epoch % 10 == 0: 
+        if accelerator.is_main_process:
+            pred = make_image(out['images'][0])
+            image = make_image(out['targets'][0])
+            logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
+            accelerator.log(logs, step=global_step)
+
+        if epoch % 5 == 0: 
             if accelerator.is_main_process:
                 save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
 
