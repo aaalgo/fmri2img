@@ -24,7 +24,7 @@ if __name__ == '__main__':
             for v in design:
                 if v != 0:
                     images.append(v-1)
-        betas_path = 'data/betas/both/betas_session%02d.nii.gz.npz' % session
+        betas_path = 'data/betas/visual/betas_session%02d.nii.gz.npz' % session
         betas = np.load(betas_path)['arr_0']
         assert len(images) == betas.shape[0]
         for i, v in enumerate(images):

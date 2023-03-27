@@ -25,7 +25,7 @@ def extract (ts, mask):
     return v
 
 if __name__ == '__main__':
-    visual_dir = 'betas/visual'
+    visual_dir = 'data/betas/visual'
     os.makedirs(visual_dir, exist_ok=True)
 
     visual_mask = load_mask().astype(bool)
