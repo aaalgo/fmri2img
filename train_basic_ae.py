@@ -17,7 +17,6 @@ from config import *
 if REPORT_TO == 'wandb':
     import wandb
 
-IMAGE_SIZE = 128
 DUPLICATE = 10
 
 logger = get_logger(__name__)
@@ -71,7 +70,7 @@ def main():
     )
 
     # Dataset and DataLoaders creation:
-    train_dataset = Fmri2ImageDataset(args.samples, IMAGE_SIZE, duplicate=DUPLICATE)
+    train_dataset = Fmri2ImageDataset(args.samples, model.IMAGE_SIZE, duplicate=DUPLICATE)
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=DATALOADER_NUM_WORKERS
     )

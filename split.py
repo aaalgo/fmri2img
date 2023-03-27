@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pickle
 import random
+from config import *
 
 with open('data/samples%02d.pkl' % SUBJECT, 'rb')as f:
     samples = pickle.load(f)

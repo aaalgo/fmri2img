@@ -3,7 +3,6 @@ ANAT_SPACE = 'anat0pt8'
 FUNC_SPACE = 'func1pt8'
 
 VISUAL_ROI_INPUT = 'prf-visualrois.nii.gz'
-VISUAL_ROI_PATH = 'data/visual.nii.gz'
 
 NSD_ROOT = 'data/raw'
 
@@ -51,4 +50,5 @@ try:
 except:
     pass
 
+VISUAL_ROI_PATH = 'data/visual%02d.nii.gz' % SUBJECT
 

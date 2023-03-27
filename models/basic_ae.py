@@ -23,6 +23,7 @@ class FmriEncoder (nn.Module):
         return x
 
 class Fmri2Image (nn.Module):
+    IMAGE_SIZE = 128
     def __init__ (self, input_dim,
                         pretrained="runwayml/stable-diffusion-v1-5",
                         pretrained_revision=None):
