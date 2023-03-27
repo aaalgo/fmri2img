@@ -30,7 +30,7 @@ def make_image (tensor):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", type=str, default='data/train.pkl', help='')
+    parser.add_argument("--samples", type=str, default='data/train%02d.pkl' % SUBJECT, help='')
     parser.add_argument("--output_dir", type=str, default='snapshots', help='')
     parser.add_argument("--learning_rate", type=float, default=1e-3, help='')
     parser.add_argument("--epochs", type=int, default=1000, help='')
@@ -120,7 +120,7 @@ def main():
                 images = model.forward(batch['fmri'])
                 targets = batch['pixel_values']
 
-                loss = F.mse_loss(images.float(), targets.float(), reduction="mean")
+                loss = torch.nn.functional.mse_loss(images.float(), targets.float(), reduction="mean")
 
                 accelerator.backward(loss)
                 optimizer.step()
@@ -132,7 +132,7 @@ def main():
 
         if accelerator.is_main_process and REPORT_TO == 'wandb':
             pred = make_image(images[0])
-            image = make_image(target[0])
+            image = make_image(targets[0])
             logs = {'image': wandb.Image(PIL.Image.fromarray(np.concatenate([image, pred], axis=1)))}
             accelerator.log(logs, step=global_step)
 
