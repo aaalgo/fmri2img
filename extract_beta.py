@@ -10,14 +10,12 @@ from calc_stat import Stats
 from config import *
 
 
-def load_mask (aparc_path=APARC_PATH, regions=EARLY_VISUAL_CORTEX):
-    aparc = np.asanyarray(nib.load(aparc_path).dataobj).astype(np.uint16)
-    mask = np.zeros_like(aparc)
-    for v in regions:
-        mask += (aparc == v)
-    assert (mask >= 0).all() and (mask <= 1).all()
-    #assert np.sum(mask) == VISUAL_DIM
-    return mask
+def load_mask (path=ROI_PATH): #aparc_path=APARC_PATH, regions=EARLY_VISUAL_CORTEX):
+    mask = np.asanyarray(nib.load(path).dataobj).astype(np.uint16)
+    v, c = np.unique(mask, return_counts=True)
+    for a, b in zip(v, c):
+        print(a, '->', b)
+    return np.logical_and(mask > 0, mask < 65535)
 
 def extract (ts, mask):
     v = []
@@ -27,18 +25,11 @@ def extract (ts, mask):
     return v
 
 if __name__ == '__main__':
-    lower_dir = 'betas/lower'
-    higher_dir = 'betas/higher'
-    both_dir = 'betas/both'
-    os.makedirs(lower_dir, exist_ok=True)
-    os.makedirs(higher_dir, exist_ok=True)
-    os.makedirs(both_dir, exist_ok=True)
+    visual_dir = 'betas/visual'
+    os.makedirs(visual_dir, exist_ok=True)
 
-    lower_mask = load_mask(regions=EARLY_VISUAL_CORTEX).astype(bool)
-    higher_mask = load_mask(regions=HIGHER_VISUAL_CORTEX).astype(bool)
-    both_mask = np.logical_or(lower_mask, higher_mask)
-    print("Lower:", np.sum(lower_mask))
-    print("Higher:", np.sum(higher_mask))
+    visual_mask = load_mask().astype(bool)
+    print("DIM:", np.sum(visual_mask))
     print("Extracting betas features..")
 
     input_paths = glob(BETA_INPUT_PATTERN)
@@ -50,12 +41,8 @@ if __name__ == '__main__':
         ts = np.asanyarray(ts.dataobj)
         #print(ts.dtype)
         #print(v.shape)
-        lower = extract(ts, lower_mask)
-        higher = extract(ts, higher_mask)
-        both = extract(ts, both_mask)
-        np.savez(os.path.join(lower_dir, os.path.basename(input_path)), lower)
-        np.savez(os.path.join(higher_dir, os.path.basename(input_path)), higher)
-        np.savez(os.path.join(both_dir, os.path.basename(input_path)), both)
+        visual = extract(ts, visual_mask)
+        np.savez(os.path.join(visual_dir, os.path.basename(input_path)), visual)
     #with open('features.pkl', 'wb') as f:
     #    pickle.dump(outputs, f)
 

@@ -46,7 +46,7 @@ def make_image (tensor):
 
 #encoder = FmriEncoder(DIM)
 model = Fmri2Image(DIM, ENCODE_DIM)
-model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-3.bin')))
+model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-*.bin')))
 model.to(device)
 
 DUP = 1

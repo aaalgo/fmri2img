@@ -19,17 +19,16 @@ from config import *
 class FmriEncoder (torch.nn.Module):
     def __init__ (self, Din):
         super().__init__()
-        self.fc1 = nn.Linear(Din, 4096)
-        self.fc2 = nn.Linear(4096, 2048)
-        self.fc3 = nn.Linear(2048, 1024)
+        self.fc1 = nn.Linear(Din, 512)
+        self.fc2 = nn.Linear(512, 256)
         # 16x16
 
-        # 4 * 4 * 4
+        # 4 * 4
         
-        self.deconv1 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
-        # 32x32
+        self.deconv1 = nn.ConvTranspose2d(16, 16, kernel_size=4, stride=2, padding=1)
+        # 8 * 8
 
-        #self.deconv2 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(16, 4, kernel_size=4, stride=2, padding=1)
 
         # 64x64
         #self.deconv3 = nn.ConvTranspose2d(16, 3, kernel_size=4, stride=2, padding=1)
@@ -41,14 +40,12 @@ class FmriEncoder (torch.nn.Module):
         x = nn.functional.gelu(x)
         x = self.fc2(x)
         x = nn.functional.gelu(x)
-        x = self.fc3(x)
-        x = nn.functional.gelu(x)
         #x = self.fc3(x)
         #x = nn.functional.gelu(x)
-        x = x.view(-1, 16, 8, 8)
+        x = x.view(-1, 16, 4, 4)
         x = self.deconv1(x)
-        #x = nn.functional.gelu(x)
-        #x = self.deconv2(x)
+        x = nn.functional.gelu(x)
+        x = self.deconv2(x)
         #output = nn.functional.gelu(x)
         return x
 
