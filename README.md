@@ -50,32 +50,28 @@ The current implementation is heavily simplified:
 - The training code is based on the huggingface textual inversion script
   (in Links session).
 
-## Workflow
+# 3. Running
 
+## 3.1 Data Download
 
+## 3.2 Environment Setup
 
+Edit local-config.py to override  default options in config.py.
+
+## 3.3 Preprocessing
 
 ```
-
-# 0. Update configuration
-# edit local-config.py to override  default options in config.py.
-
-# 1. Scan the fMRI data and calculate statistics.
-./calc_stat.py
-
-# 2. Extract feature.
-./extract_voxels
-
-# 3. Split to training and test set.
+./convert_roi.py
+./extract_beta.py
+./create_dataset.py
 ./split.py
-
-# 4. Train
-./train.py      # or accelerate launch ./train.py
-
-# 5. Test
-./test.py
+```
+## 3.4 Train Basic AutoEncoder Model
 
 ```
+./train_basic_ae.py
+```
+
 
 # 3. Links
 
