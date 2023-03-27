@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 import os
-import sys
-import pickle
 import numpy as np
 import nibabel as nib
 from glob import glob
 from tqdm import tqdm
-from calc_stat import Stats
 from config import *
 
+BETA_INPUT_PATTERN = '%s/nsddata_betas/ppdata/subj%02d/%smm/betas_fithrf_GLMdenoise_RR/betas_session*.nii.gz' % (NSD_ROOT, SUBJECT, FUNC_SPACE)
 
-def load_mask (path=ROI_PATH): #aparc_path=APARC_PATH, regions=EARLY_VISUAL_CORTEX):
+def load_mask (path=VISUAL_ROI_PATH):
     mask = np.asanyarray(nib.load(path).dataobj).astype(np.uint16)
     v, c = np.unique(mask, return_counts=True)
     for a, b in zip(v, c):
@@ -35,14 +33,8 @@ if __name__ == '__main__':
     input_paths = glob(BETA_INPUT_PATTERN)
     print(len(input_paths))
     for input_path in tqdm(input_paths):
-        #print(input_path)
         ts = nib.load(input_path)
-        #ts = ts.get_data()
         ts = np.asanyarray(ts.dataobj)
-        #print(ts.dtype)
-        #print(v.shape)
         visual = extract(ts, visual_mask)
         np.savez(os.path.join(visual_dir, os.path.basename(input_path)), visual)
-    #with open('features.pkl', 'wb') as f:
-    #    pickle.dump(outputs, f)
 

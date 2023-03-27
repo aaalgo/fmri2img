@@ -10,14 +10,13 @@ from tqdm import tqdm
 from config import *
 
 if __name__ == '__main__':
-    #imgBrick = h5py.File('data/nsd_stimuli.hdf5', 'r')['imgBrick']
 
     samples = defaultdict(lambda: [])
     total = []
     for session in range(1,38):
         images = []
         for run in range(1, 20):
-            design_path = 'data/design/design_session%02d_run%02d.tsv' % ( session, run)
+            design_path = os.path.join(NSD_ROOT, 'nsddata_timeseries/ppdata/subj%02d/%smm' % (SUBJECT, FUNC_SPACE), 'design/design_session%02d_run%02d.tsv' % ( session, run))
             if not os.path.exists(design_path):
                 continue
             design = np.loadtxt(design_path, dtype=np.int32, usecols=0)
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     for k, v in samples.items():
         out.append({
             'image_id': k,
-            'features': [(x - mean) /std for x in v]
+            'fmri': [(x - mean) /std for x in v]
             })
     with open('data/samples.pkl', 'wb') as f:
         pickle.dump(out, f)

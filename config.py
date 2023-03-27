@@ -1,10 +1,16 @@
-TIMESERIES_SHAPE = None # (81, 104, 83, 226)
-CORR_INPUT_PATTERN = None
+SUBJECT = 1
+ANAT_SPACE = 'anat0pt8'
+FUNC_SPACE = 'func1pt8'
+
+VISUAL_ROI_INPUT = 'prf-visualrois.nii.gz'
+VISUAL_ROI_PATH = 'data/visual.nii.gz'
+
+NSD_ROOT = 'data/raw'
 
 SIGMA_THRESHOLD = 60
 EDGE_THRESHOLD = 0.5
 
-IMAGE_SIZE = 128
+#IMAGE_SIZE = 128
 
 MIXED_PRECISION = 'fp16'
 REPORT_TO = 'wandb'
@@ -25,6 +31,7 @@ TRAIN_TIMESTEPS = 50
 
 RESPONSE_DELAY = 1
 
+VISUAL_DIM = 4660
 DIM = 4660
 ENCODE_DIM = 768
 
@@ -38,8 +45,9 @@ for d0 in [-1, 0, 1]:
             NEIGHBORS_DELTA.append((d0, d1, d2))
 
 try:
-    from local_config import *
-    print("Found local config, importing...")
+    with open('local_config.py', 'r') as f:
+        code = f.read()
+    exec(code)
 except:
     pass
 
