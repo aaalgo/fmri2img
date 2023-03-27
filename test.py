@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 import glob
 from tqdm import tqdm
 import numpy as np
@@ -10,7 +9,7 @@ from models import Fmri2Image
 from train import Fmri2ImageDataset, make_image
 import PIL
 import random
-from gallery.gallery import Gallery
+from gallery import Gallery
 from config import *
 
 #SIZE=256
@@ -23,7 +22,7 @@ def glob_newest (pattern):
     print("Using", newest_file)
     return newest_file
 
-device =  torch.device('cuda:0')
+device =  torch.device('cuda')
 
 #pipeline = DiffusionPipeline.from_pretrained(
 #    "runwayml/stable-diffusion-v1-5",
@@ -46,18 +45,18 @@ def make_image (tensor):
 
 #encoder = FmriEncoder(DIM)
 model = Fmri2Image(DIM, ENCODE_DIM)
-model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2image-*.bin')))
+model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2img%02d*.bin' % SUBJECT)))
 model.to(device)
 
 DUP = 1
 COLS = 5
 
 for split in ['test', 'train']:
-    test_ds = Fmri2ImageDataset('data/%s.pkl' % split, is_train=False)
+    test_ds = Fmri2ImageDataset('data/%s%02d.pkl' % (split, SUBJECT), is_train=False)
     #random.seed(1999)
     random.shuffle(test_ds.samples)
 
-    gal = Gallery('%s_out'  % split , cols= COLS)
+    gal = Gallery('output/%s%02d'  % (split, SUBJECT) , cols= COLS)
 
     for i in tqdm(range(128)):
         sample = test_ds[i]

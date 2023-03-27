@@ -137,11 +137,11 @@ def main():
 
         if epoch % 1 == 0: 
             if accelerator.is_main_process:
-                save(os.path.join(args.output_dir, f"fmri2image-{epoch}.bin"))
+                save(os.path.join(args.output_dir, f"fmri2img-{epoch}.bin"))
 
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        save(os.path.join(args.output_dir, f"fmri2image.bin"))
+        save(os.path.join(args.output_dir, f"fmri2img.bin"))
     accelerator.end_training()
 
 
