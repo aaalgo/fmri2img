@@ -17,7 +17,7 @@ from config import *
 if REPORT_TO == 'wandb':
     import wandb
 
-DUPLICATE = 10
+DUPLICATE = 1
 
 logger = get_logger(__name__)
 

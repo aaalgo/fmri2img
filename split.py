@@ -8,8 +8,6 @@ with open('data/samples%02d.pkl' % SUBJECT, 'rb')as f:
 
 random.shuffle(samples)
 
-N_TRAIN = 3000
-
 train = samples[:N_TRAIN]
 test = samples[N_TRAIN:]
 
