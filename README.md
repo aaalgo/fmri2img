@@ -52,6 +52,13 @@ trained.
 
 # 3. Running
 
+## 3.1 Hardware Requirement
+
+I'm currently training the model with 4xA40 (40GB each), each epoch
+of about 9000x3 samples takes about 1.5 minutes.  One should
+be able to train the model on one GTX 1080 be reducing the `BATCH_SIZE`
+(and also `DATALOADER_NUM_WORKERS`).
+
 ## 3.2 Environment Setup
 
 The repo is designed to be used within the source directory.
