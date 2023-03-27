@@ -5,11 +5,11 @@ from tqdm import tqdm
 import numpy as np
 import torch
 import torch.nn.functional as F
-from models import Fmri2Image
-from train import Fmri2ImageDataset, make_image
+from models.basic_ae import Fmri2Image
+from train_basic_ae import Fmri2ImageDataset, make_image
 import PIL
 import random
-from gallery import Gallery
+from gallery.gallery import Gallery
 from config import *
 
 #SIZE=256
@@ -43,16 +43,15 @@ def make_image (tensor):
 
 #pipeline.to('cuda')
 
-#encoder = FmriEncoder(DIM)
-model = Fmri2Image(DIM, ENCODE_DIM)
-model.encoder.load_state_dict(torch.load(glob_newest('output/fmri2img%02d*.bin' % SUBJECT)))
+model = Fmri2Image(VISUAL_DIM)
+model.encoder.load_state_dict(torch.load(glob_newest('snapshots/fmri2img%02d*.bin' % SUBJECT)))
 model.to(device)
 
 DUP = 1
 COLS = 5
 
 for split in ['test', 'train']:
-    test_ds = Fmri2ImageDataset('data/%s%02d.pkl' % (split, SUBJECT), is_train=False)
+    test_ds = Fmri2ImageDataset('data/%s%02d.pkl' % (split, SUBJECT), model.IMAGE_SIZE, is_train=False)
     #random.seed(1999)
     random.shuffle(test_ds.samples)
 
