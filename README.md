@@ -1,9 +1,19 @@
 FMRI2IMG
 ==========
 
+Sample basic autoencoder outputs.
+
+![plot](./doc/basic_ae_output/063.png)
+![plot](./doc/basic_ae_output/077.png)
+![plot](./doc/basic_ae_output/079.png)
+![plot](./doc/basic_ae_output/089.png)
+![plot](./doc/basic_ae_output/097.png)
+
 WanDB: https://wandb.ai/aaalgo/fmri2image?workspace=user-aaalgo
 
 Updates:
+
+- Mar 27, 2023:  week signal obtained with autoencoder.
 
 - Mar 25, 2023:  Using betas as input.  The data fitting becomes
   much faster, but the test set barely have any signal.
@@ -41,10 +51,8 @@ The current implementation is heavily simplified:
 
 ## Workflow
 
-This is in a very early stage.  Don't expect this to work directly.
-You'll need a GPU with 40+GB memory.
-The dataset is very big; a single subjects' low-resolution
-data is over 50GB.
+
+
 
 ```
 
