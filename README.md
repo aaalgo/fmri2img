@@ -10,7 +10,7 @@ Sample basic autoencoder outputs.
 ![plot](./doc/basic_ae_output/097.png)
 ![plot](./doc/basic_ae_output/108.png)
 
-WanDB: https://wandb.ai/aaalgo/fmri2image?workspace=user-aaalgo
+WanDB: https://wandb.ai/aaalgo/fmri2img
 
 Updates:
 
